@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>To-Do List</title>
+ <style>
+    /* Add your CSS code here */
+ </style>
+</head>
+<body>
+ <div class="container">
+    <h1>To-Do List</h1>
+    <input type="text" id="taskInput" placeholder="Enter a task...">
+    <button id="addTaskButton">Add Task</button>
+    <ul id="taskList"></ul>
+ </div>
+ <script>
+    // Retrieve tasks from local storage
+    const tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    // Display tasks in the list
+    tasks.forEach(task => {
+      addTaskToList(task.id, task.task, task.completed);
+    });
+
+    // Add a task
+    document.getElementById('addTaskButton').addEventListener('click', () => {
+      const taskInput = document.getElementById('taskInput');
+      if (taskInput.value.trim() === '') {
+        alert('Please enter a task');
+        return;
+      }
+      addTask(taskInput.value);
+      taskInput.value = '';
+    });
+
+    // Delete a task
+    function deleteTask(id) {
+      const task = document.getElementById(id);
+      task.parentElement.removeChild(task);
+      const index = tasks.findIndex(task => task.id === id);
+      tasks.splice(index, 1);
+      saveTasks();
+    }
+
+    // Edit a task
+    function editTask(id) {
+      const task = document.getElementById(id);
+      const taskText = task.getElementsByClassName('task-text')[0];
+      const editInput = document.createElement('input');
+      editInput.type = 'text';
+      editInput.value = taskText.textContent;
+      taskText.textContent = '';
+      taskText.appendChild(editInput);
+      editInput.focus();
+      editInput.addEventListener('blur', () => {
+        if (editInput.value.trim() === '') {
+          alert('Please enter a task');
+          return;
+        }
+        taskText.textContent = editInput.value;
+        editInput.parentElement.removeChild(editInput);
+        const index = tasks.findIndex(task => task.id === id);
+        tasks[index].task = editInput.value;
+        saveTasks();
+      });
+    }
+
+    // Toggle task completion
+    function toggleCompletion(id) {
+      const task = document.getElementById(id);
+      task.classList.toggle('completed');
+      const index = tasks.findIndex(task => task.id === id);
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+    }
+
+    // Add a task to the list
+    function addTaskToList(id, task, completed) {
+      const taskList = document.getElementById('taskList');
+      const listItem = document.createElement('li');
+      listItem.id = id;
+      listItem.innerHTML = `
+        <span class="task-text ${completed ? 'completed' : ''}">${task}</span>
+        <button class="edit-button" onclick="editTask('${id}')">Edit</button>
+        <button class="delete-button" onclick="deleteTask('${id}')">Delete</button>
+        <button class="toggle-completion" onclick="toggleCompletion('${id}')">Toggle Completion</button>
+      `;
+      taskList.appendChild(listItem);
+    }
+
+    // Add a task
+    function addTask(task) {
+      const id = tasks.length + 1;
+      tasks.push({ id, task, completed: false });
+      addTaskToList(id, task, false);
+      saveTasks();
+    }
+
+    // Save tasks to local storage
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+ </script>
+</body>
+</html>
